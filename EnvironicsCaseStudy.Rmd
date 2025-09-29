@@ -1,0 +1,826 @@
+---
+title: "Environics Case Study"
+author: "Athira"
+date: "2025-06-25"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    always_allow_html: true
+  pdf_document:
+    toc: true
+  output:
+    pdf_document:
+      toc: true
+      number_sections: true
+      highlight: tango
+      latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Introduction
+
+   Here our aim is to identify which target groups experienced a decline from 2023 to 2024 and develop targeted strategies to increase purchases and/or average expenditures for Wander Luxe.
+   For acheiving that our game plan can divided into different steps
+   
+       - do an initial analysis based on document Target Groups: Demographic Summary & Purchasing Details.From this analysis we can identify our targeted group.
+       
+       - After identifying targeted group we are analyzing excel document EnvironicsAnalytics_Supplementary_DemoStats - Target Group.xlsx, which contain supplementary information 
+         on all these targeted group. But our primary study is on selected targeted group from earlier analysis.
+         
+       - From the above result and information from EnvironicsAnalytics_Social Values - Target Group, we can suggest steps for improvement of sales
+       
+
+
+## Initial Analysis based on Target Groups: Demographic Summary & Purchasing Details
+
+### Based on declining sales from Wander Luxe Matrix- 2023-2024 we can list 3 groups
+                                                 
+      - Timeless Trends- 17-12%      -5% Decrease       Average Annual Expenditure decline-295
+
+      - Heights of Style- 15-10%     -5% Decrease       Average Annual Expenditure decline-167
+
+      - Country Chic- 13-12%         -1% decrease       Average Annual Expenditure-151 increase
+
+Here from the above analysis we can see like %5 decrease is for 2 targeted groups[Timeless Trends and Heights of Style],
+For Country Chic only 1% decline. Average anual expenditure is declined maximum on Timeless Trends. 
+So based on this Analysis I am picking **Timeless Trends** for our Analystical study.
+
+## Analysis of EnvironicsAnalytics_Supplementary_DemoStats - Target Group.xlsx using R
+
+### importing libraries
+
+```{r}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+#import the file
+envronics<-read_excel("EnvironicsAnalytics_Supplementary_DemoStats - Target Group.xlsx",skip = 3)
+
+```
+
+### Finding the rows having details were Timeless trend Index is more than average people exibit charachterstic
+    
+    - We can target these group of people who have more than average similar charachterstics
+
+```{r}
+# Counting the Timeless Index, where index is more than average
+More_than_average_Timeless_Index_count<-sum(envronics$`Timeless Trends_Index`>100)
+print(More_than_average_Timeless_Index_count)
+
+#Getting the dataset with Timeless Index  is more than average and Plot that using ggplot
+Timeless_Index_Higher_details<-envronics %>% 
+                               select(Features,Timeless_Trends_Count,`Timeless Trends%`,`Timeless Trends% Pen`,`Timeless Trends_Index`) %>% 
+                              filter(envronics$`Timeless Trends_Index`>100)
+print(Timeless_Index_Higher_details)
+```
+
+## Plot for above data.
+
+### Inference from Bellow Plot
+  
+ - We are anlyzing timeless trend Index.
+ - We are checking on values more than average index(>100)
+ - We could see like Management people has more than 200 index
+ - We could also infer like Czech people,Mandreain speaking people,- 
+ - persian people and people having average house hold income lies in the 150-200 Index range
+ 
+These people can be our targetted groups
+
+```{r}
+ggplot(Timeless_Index_Higher_details, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_point(fill = "lightgreen", color = "black",size=3) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.margin = margin(10, 10, 30, 10)
+  ) +
+  labs(
+    title = "Timeless Trends Index by Feature",
+    x = "Feature",
+    y = "Timeless Trends Index")
+```
+### Analysis based on Age of Household maintainer
+
+ - Based on our analysis and Plot "85 0r older" chategory is having higher Timeless trend Index.
+ - We also seeing a trend of increasing Timeless Trend index with increasing age.
+ 
+```{r}
+#creating a dataset with Age of Household Maintainer
+Age_of_household_maintainer<-filter(envronics, Features %in% c("15 to 24","25 to 34",
+"35 to 44","45 to 54","55 to 64","65 to 74","75 To 84","85 Or Older"))
+
+ggplot(Age_of_household_maintainer, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+ labs(title = "Age Of Household Maintainer",
+   x = "Age of Household Maintainer")+
+   #    y = "Passenger Count") 
+  theme_minimal()
+#Getting the count of higher average index based on Age of household maintainer
+More_than_average_age_Househld_maintainer=0
+More_than_average_age_Househld_maintainer<-sum(Age_of_household_maintainer$`Timeless Trends_Index`>100)
+print(More_than_average_age_Househld_maintainer)
+
+```
+
+### Analysis and Inference based on household type
+
+ - From plot we can see that One family household is having highest index.
+ 
+ - Multiple Family Household and Total family House hold is also having higher indexes.
+ 
+```{r}
+#Creating a dataframe with house hold type
+Household_Type<- filter(envronics,Features %in% c("Total Family Households","One-Family Households","Multigenerational Family Households
+","Multiple-Family Households","Non-Family Households","One-Person Households","Two-Or-More-Person Households
+"))
+#Inference:-One family household is having high index
+ggplot(Household_Type, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Household Type",
+       x = "Household Type")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+```
+### Analysis based on Size of Household
+
+- From the graph we can see like 4 person household is having highest Trend Index
+- 2person, 3 person, 5 or more person is also having higher Trend Indexes.
+- We can group them and can apply marketing stratergies together
+
+```{r}
+#Creating a dataset with Size of household
+Size_of_household <- filter(envronics, Features %in% c("1 Person","2 Persons","3 Persons","4 Persons","5 or More Persons"))
+
+#from the plot bellow we could infer like 4 person famiy having high index
+ggplot(Size_of_household, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Size of household with TrendIndex",
+       x = "Size of Household",
+      y = "Timeless Trend Index") +
+  theme_minimal()
+#Counting the higher timeless trend Index based on Size of Household
+More_than_avrg_size_of_household<-sum(Size_of_household$`Timeless Trends_Index`>100)
+print(More_than_avrg_size_of_household)
+```
+### Analysis Based on Marital Status
+
+ - Married or living with a common low partner have higher value of index but index value is less than 100, means less than average
+ - Not a potential target group
+
+
+```{r}
+#Creating a dataset with Marital status
+Marital_Status<-filter(envronics,Features %in% c("Married Or Living w/ A Common-Law Partner","Single (Never Legally Married)","Separated
+","Divorced","Widowed"))
+#from the graph bellow we could infer like Married or leaving with a common low partner has greater value of index
+ggplot(Marital_Status, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Marital Status with Trend Index",
+     x = "Marital Status")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#Counting the higher timeless trend Index based on Marital Status
+More_than_average_Marital_Status<-sum(Marital_Status$`Timeless Trends_Index`>100)
+print(More_than_average_Marital_Status)
+```
+
+### Analysis based on Children at home 
+
+ - based on analysis Family with children at home is having 20% more than average  Timeless Trend Index
+ - So such families can be potential target for marketing
+ 
+```{r}
+#Inference from bellow plot is that, household with children at home is having more than average Timeless Index
+Children_at_Home<-filter(envronics,Features %in% c("Households with Children at Home"))
+ggplot(Children_at_Home, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "children at home with Trend Index",
+       x = "Children at home")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+More_than_average_children_at_home<-sum(Children_at_Home$`Timeless Trends_Index`>100)
+print(More_than_average_children_at_home)
+
+```
+### Age Of Children at Home
+
+ - Based on bellow analysis we can see like children of age from 15-25 are having more than average Timeless trend index 
+ - Of that 20-24 have highest range 
+ - Above group can be our intended group
+
+```{r}
+#Created a Dataframe with age of children at home
+Age_of_Children_at_Home<-filter(envronics,Features %in% c("Total Number Of Children At Home",
+"0 to 4",
+"5 to 9",
+"10 to 14",
+"15 to 19",
+"20 to 24",
+"25 and over"
+))
+#Inference from Plot
+#20-24 age range is the children having highest Timeless Trend Index 
+ggplot(Age_of_Children_at_Home, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Age Range of children with Timeless trend Index",
+   x = "Age range of Children")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value is listed 
+More_than_average_age_children_at_home<-sum(Age_of_Children_at_Home$`Timeless Trends_Index`>100)
+print(More_than_average_age_children_at_home)
+```
+### Housing Tenure 
+
+  - Here people who is owning the home is having more than average Timeless Trend Index
+  
+```{r}
+# creating a dataset with Housing Tenure details
+Housing_Tenure<-filter(envronics,Features %in% c("Owned",
+                                                 "Rented","Band Housing"))
+#Inference from Plot
+#We can see person who owned the house is having higher Timeless Trend Index
+ggplot(Housing_Tenure, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Housing Tenure with Timeless Tend Index",
+     x = "Housing Tenure")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_housing_tenur<-sum(Housing_Tenure$`Timeless Trends_Index`>100)
+print(More_than_avg_housing_tenur)
+```
+### Housing Type
+
+ - Houses and Single-Detached Houses having high Timeless trend Index, so this is our target group
+
+```{r}
+#Creating a dataset with Housing Type
+Housing_Type<-filter(envronics, Features %in% c("Houses",
+                                                "Single-Detached House",
+                                                "Semi-Detached House",
+                                                "Row House",
+                                                "Apartments",
+                                                "High-rise (5+ Floors)",
+                                                "Low-rise (<5 Floors)",
+                                                "Detached Duplex",
+                                                "Other Dwelling Types"
+))
+#Ploting graph
+#Person with single Detached house is having higher Timeless Trend index
+ggplot(Housing_Type, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Housing type with Timeless Trend Index", 
+    x = "Housing Type") +
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_house_type<-sum(Housing_Type$`Timeless Trends_Index`>100)
+print(More_than_avg_house_type)
+
+```
+
+### Year Of Construction
+
+ - Houses constructed between 1961-2000 is having highest timeless trend Index, hence our target group
+
+```{r}
+#Creating a Dataset with Housing period of Construction details
+Housing_Period_of_Construction<-filter(envronics,Features %in% c("Before 1961",
+                                                                 "1961 - 1980",
+                                                                 "1981 - 1990",
+                                                                 "1991 - 2000",
+                                                                 "2001 - 2005",
+                                                                 "2006 - 2010",
+                                                                 "2011 - 2015",
+                                                                 "2016 - 2021",
+                                                                 "After 2021"
+))
+# 1981-90 housing constructed people have higher Timeless trend index
+ggplot(Housing_Period_of_Construction, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Housing Period of Construction with Timeless trend Index",
+  x = "Housing Period of Construction")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_housing_construction<-sum(Housing_Period_of_Construction>100)
+print(More_than_avg_housing_construction)
+
+```
+### Household Income based Analysis
+
+ - Having Timeless trend index nearer to 200, almost 100% more than average 
+ 
+```{r}
+#Created dataset with household Income
+Household_Income<-filter(envronics,Features %in% c("Average Household Income"))
+#Plot a graph
+#Graph shows Timeless Trend Index is nearly equal to 200, which is so high
+ggplot(Household_Income, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Household Income with Timeless trends Index",
+ x = "Household Income")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_average_household_income<-sum(Household_Income$`Timeless Trends_Index`>100)
+print(More_than_average_household_income)
+```
+
+### Analysis Based on Education
+
+ - University degree is having more than average timeless trend Index
+ - We should focus on their needs and marketing strategies based on their needs
+
+```{r}
+#Created a dataset with education details 
+Education<-filter(envronics,Features %in% c("No Certificate, Diploma Or Degree",
+                                            "High School Certificate Or Equivalent",
+                                            "Apprenticeship Or Trades Cert/Dipl",
+                                            "College/CEGEP/Non-University Cert/Dipl",
+                                            "University Cert/Dipl Below Bachelor",
+                                            "University Degree"
+))
+#After ploting we could see like a person ith University degree is having highest Timeless Trend Index
+ggplot(Education, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Education with Timeless trend Index",
+  x = Education)+
+  #    y = "Passenger Count") 
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#count of Timeless trend index having more than average value in this group is listed 
+More_Than_average_Education<-sum(Education$`Timeless Trends_Index`>100)
+print(More_Than_average_Education)
+```
+
+### Analysis based on Labour Force Occupation
+
+- Management is having highest Timeless trend Index even 150% more than average
+
+- we should focus on Management people
+
+-  there were other occupations Art, Culture, Recreation, Sport, Business, Finance, Administration,Education, Gov't, Religion, Social,Health,Management,Sciences listed in graph having more than average timeless trend index
+
+- We should take measures to improve these areas or implement different strategies
+
+```{r}
+#Created a dataset with Labour force details 
+Labour_Force<-filter(envronics,Features %in% c("In The Labour Force (15+)"))
+More_than_avg_Labour_Force<-sum(Labour_Force$`Timeless Trends_Index`>100)
+print(More_than_avg_Labour_Force)
+
+
+#Created a dataset with Labour force details
+Labour_Force_by_Occupation<-filter(envronics,Features %in% c("Management",
+                                                             "Business, Finance, Administration",
+                                                             "Sciences",
+                                                             "Health",
+                                                             "Education, Gov't, Religion, Social",
+                                                             "Art, Culture, Recreation, Sport",
+                                                             "Sales and Service",
+                                                             "Trades, Transport, Operators",
+                                                             "Natural Resources and Agriculture",
+                                                             "Manufacturing and Utilities"
+))
+#From plot we can see like Management people is having higher Timeless trend Index
+ggplot(Labour_Force_by_Occupation, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Labor Force By Occupation with Timeless trend index",
+   x = "Labour Force by Occupation")+
+  #    y = "Passenger Count") 
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_average_lbr_frce_occpn<-sum(Labour_Force_by_Occupation>100)
+print(More_than_average_lbr_frce_occpn)
+
+```
+
+### Analysis based on commuting
+
+ - More than average Timeless Trend Index is with Bicycle,but nearly in margin
+ - Make shopping available based on their requirements and lifestyle.
+
+```{r}
+#Created a dataset based on ways of travel
+Commuting<-filter(envronics,Features %in% c("Car (As Driver)",
+                                            "Car (As Passenger)",
+                                            "Public Transit",
+                                            "Walk",
+                                            "Bicycle"
+))
+#From plot Person who is traveling with bicycle is showing higher Timeless Trend index
+ggplot(Commuting, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Commuting with tieless trend Index",
+      x = "Commuting")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_commuting<-sum(Commuting$`Timeless Trends_Index`>100)
+print(More_than_avg_commuting)
+
+```
+
+
+### Indegenious Identity
+
+- Timeless Trend index is very small, so not a potential target
+
+```{r}
+#Created a dataset with Indigenious Identity details
+Indigenous_Identity<-filter(envronics,Features %in% c("Indigenous Identity"))
+#Timeless trend index is less even bellow 50
+ggplot(Indigenous_Identity, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Indeginious Identity with Timeless trend Index",
+   x = "Indegenious Identity")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_Indigenious<-sum(Indigenous_Identity$`Timeless Trends_Index`>100)
+print(More_than_avg_Indigenious)
+```
+
+
+
+
+
+### Knowledge Of Official Language
+
+ - Knowledge in English Only people is having highest Timeless Trend Index, potential marketting target
+
+```{r}
+#Created a dataset with Knowledge of Official Language
+Knowledge_of_Official_Language<-filter(envronics,Features %in% c("English Only",
+                                                                 "French Only",
+                                                                 "English And French",
+                                                                 "Neither English Nor French"
+))
+#From plot we can see like person having English only having high index
+ggplot(Knowledge_of_Official_Language, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Knowledge of Official language with Timeless trend Index",
+      x = "Knowledge of Official Language")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_Knowlege_of_official_Language<-sum(Knowledge_of_Official_Language>100)
+print(More_than_avg_Knowlege_of_official_Language)
+
+```
+
+
+### Immigration Status
+
+ - Born outside of province of residence is having highest Timeless trend Index
+ - Immigrants and born outside of province of residence is having highest timeless trend index, can be potential target
+
+```{r}
+#Created a dataset with Immigration status details
+Immigration_Status<-filter(envronics,Features %in% c("Non-Immigrant Population",
+                                                     "Born in province of residence",
+                                                     "Born outside province of residence",
+                                                     "Immigrant Population"
+))
+# from plot we can see Born outside province of residence is having higher Timeless Trend Index.
+ggplot(Immigration_Status, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Immigration status with Timeless Trend Index",
+       x = "Immigration Status")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_Immigration_status<- sum(Immigration_Status$`Timeless Trends_Index`)
+print(More_than_avg_Immigration_status)
+```
+
+### Visible Minority Status
+
+ - Japanese and Korean is having very high Timeless trend Index[more than 200% from average]
+ 
+ - Chinese and South Asian people is also having more than average Timeless trend Index
+ 
+ - Above groups can be potential marketing targets
+ 
+
+```{r}
+#Created a dataset with Visible minority status
+Visible_Minority_Status<-filter(envronics,Features %in% c("Total Visible Minorities",
+                                                          "Chinese",
+                                                          "South Asian",
+                                                          "Black",
+                                                          "Filipino",
+                                                          "Latin American",
+                                                          "Southeast Asian",
+                                                          "Arab",
+                                                          "West Asian",
+                                                          "Korean",
+                                                          "Japanese"
+))
+#Japenese and Korean is having highest Timeless Trend Index as based on plot
+ggplot(Visible_Minority_Status, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Visible Minority status with timeless trend index",
+       x = "Visible Minority Status")+
+  #    y = "Passenger Count") 
+  theme_minimal()
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_visible_minority<-sum(Visible_Minority_Status>100)
+print(More_than_avg_visible_minority)
+```
+
+
+### Analysis based on Mother Tongue
+
+ - Here Japanese and Korean is having way higher index 200 above average
+ - People who is having mother toungue more than averge Timeless trend index is Cantonese,Chinese N.O.S,Croatian
+ Czech,Duch,English,Mandarin,German,Greek,Hungarian,Italian,Persian,Polish,Romanian, Russian,Serbian, Russian,Ukrainian.
+
+
+```{r}
+#Created a graph based on mother tounge
+Mother_Tongue<-filter(envronics,Features %in% c("English",
+                                                "French",
+                                                "Total Non-Official",
+                                                "Italian",
+                                                "German",
+                                                "Punjabi",
+                                                "Cantonese",
+                                                "Spanish",
+                                                "Arabic",
+                                                "Tagalog",
+                                                "Portuguese",
+                                                "Polish",
+                                                "Mandarin",
+                                                "Chinese N.O.S",
+                                                "Urdu",
+                                                "Vietnamese",
+                                                "Ukrainian",
+                                                "Persian",
+                                                "Russian",
+                                                "Dutch",
+                                                "Korean",
+                                                "Greek",
+                                                "Tamil",
+                                                "Gujarati",
+                                                "Romanian",
+                                                "Hindi",
+                                                "Hungarian",
+                                                "Croatian",
+                                                "Creoles",
+                                                "Serbian",
+                                                "Bengali",
+                                                "Japanese",
+                                                "Turkish",
+                                                "Czech",
+                                                "Somali",
+                                                "Indigenous Languages",
+                                               "Multiple Non-Official Languages"
+))
+#Based on the plot Japenese and Korean speaking people have highest Timeless Trend Index 
+ggplot(Mother_Tongue, aes(x=Features,y=`Timeless Trends_Index`)) +
+  geom_col(fill = "lightgreen", color = "black") +
+  labs(title = "Mother tounge v/s Timeless trend Index",
+      x = "Mother Tongue")+
+  #    y = "Passenger Count") 
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+#count of Timeless trend index having more than average value in this group is listed 
+More_than_avg_Mother_Tongue<-sum(Mother_Tongue$`Timeless Trends_Index`>100)
+print(More_than_avg_Mother_Tongue)
+```
+## Clustering based on Features and Timeless trend data help of Kmeans Algorithm
+
+ - Using below code we are creating 3 clusters with similar characteristics
+ 
+ - Feature and corresponding cluster is listed in the table
+ 
+ - Generated plots with Timeless_Trends_Count, Timeless Trends_Index in x and y axis with result of Kmeans
+
+ - Generated plot with Timeless_Trends_Count,Timeless Trends% on x and y axis with the result of Kmeans
+ 
+ - We can use 3 different marketing strategies on these cluster features based on the simillarity
+
+
+
+```{r,fig.width=12, fig.height=7}
+#Select and clean clustering data
+clustering_data1 <- envronics %>%
+  select(Features,Timeless_Trends_Count,`Timeless Trends%`,`Timeless Trends% Pen`,`Timeless Trends_Index`)
+
+#Remove rows with NA/NaN/Inf
+clustering_data1 <- clustering_data1[complete.cases(clustering_data1), ]
+clustering_data1 <- clustering_data1[!apply(clustering_data1, 1, function(row) any(is.nan(row) | is.infinite(row))), ]
+
+#Extract numeric part and convert types
+numeric_data <- clustering_data1 %>%
+  select(-Features) %>%
+  mutate_all(~as.numeric(as.character(.)))  # In case some are factors
+anyNA(numeric_data)                     # Checks for NA
+any(is.nan(as.matrix(numeric_data)))   # Checks for NaN
+any(is.infinite(as.matrix(numeric_data)))
+numeric_data_clean <- numeric_data[complete.cases(numeric_data), ]
+
+
+#KMeans clustering
+kmeans.result <- kmeans(numeric_data_clean, centers = 3)
+
+combined<-cbind(clustering_data1$Features,kmeans.result$cluster)
+combineddf<-as.data.frame(combined)
+#View(combineddf)
+knitr::kable(combineddf, caption = "Features and Corresponding Cluster")
+
+
+#Combine everything cleanly
+clustering_result <- clustering_data1
+#clustering_result$Cluster <- as.factor(kmeans.result$cluster)
+
+plot(numeric_data$Timeless_Trends_Count, numeric_data$`Timeless Trends%`,
+     col = kmeans.result$cluster,
+     pch = 19, cex = 1.5,
+     xlab = "Timeless Trends Count",
+     ylab = "Timeless Trends%",
+     main = "K-means Clustering (k = 3)",
+     ylim= c(0,150))
+
+#Adding labels
+text(numeric_data$Timeless_Trends_Count, numeric_data$`Timeless Trends%`,
+     labels = clustering_data1$Features, pos = 3, cex = 0.7)
+
+plot(numeric_data$Timeless_Trends_Count, numeric_data$`Timeless Trends_Index`,
+     col = kmeans.result$cluster,
+     pch = 19, cex = 2,
+     xlab = "Timeless Trends Count",
+     ylab = "Timeless Trends%",
+     main = "K-means Clustering (k = 3)",
+     ylim= c(0,300))
+
+#Adding labels
+text(numeric_data$Timeless_Trends_Count, numeric_data$`Timeless Trends_Index`,
+     labels = clustering_data1$Features, pos = 3, cex = 0.7)
+
+
+```
+
+
+
+## From the above study we could find like we should target marketing on
+
+ - Here Japanese and Korean mother tongue is having way higher index 200 above average.People who is having mother toungue more than averge Timeless trend index is Cantonese,Chinese,N.O.S,Croatian,Czech,Duch,English,Mandarin,German,Greek,Hungarian,Italian,Persian,Polish,Romanian, Russian,Serbian, Russian,Ukrainian.
+ 
+  - Japanese and Korean is having very high Timeless trend Index[more than 200% from average]
+ 
+ -  Chinese and South Asian people is also having more than average Timeless trend Index
+ 
+  - Immigrants and born outside of province of residence is having highest timeless trend index, can be potential target
+  
+  - Knowledge in English Only people is having highest Timeless Trend Index, potential marketing target
+  
+  - More than average Timeless Trend Index is with Bicycle,but nearly in margin.
+  
+  Management is having highest Timeless trend Index even 150% more than average
+
+ - we should focus on Management people
+
+ -  There were other occupations Art, Culture, Recreation, Sport, Business, Finance, Administration,Education, Gov't, Religion,   Social,Health,Management,Sciences listed in graph having more than average timeless trend index
+ 
+ -  University degree is having more than average timeless trend Index
+ 
+  - Houses constructed between 1961-2000 is having highest timeless trend Index, hence our target group
+  
+  - House Income families are having index much higher
+  
+  - Based on house type ,Houses and Single-Detached Houses having high Timeless trend Index, so this is our target group
+  
+  - People who is owning the home is having more than average Timeless Trend Index
+  
+  - We can see like children of age from 15-25 are having more than average Timeless trend index ,20-24 have highest range
+  
+  - Family with children at home is having 20% more than average  Timeless Trend Index
+  
+  - 4 person household is having highest Trend Index.2person, 3 person, 5 or more person is also having higher Trend Indexes.
+
+  - "85 0r older" category is having higher Timeless trend Index.We also seeing a trend of increasing Timeless Trend index with   increasing age.
+  
+  - From plot we can see that One family household is having highest index.
+ 
+  - Multiple Family Household and Total family House hold is also having higher indexes.
+  
+  -We can also applied to 3 clusters generated from Kmeans algorithm based on their needs
+  
+These are our targeted groups based on Timeless trend Index. We should implement plans for improving shopping for these potential groups. It can be based on their needs, necessities, beliefs and cultural and Social backgrounds.
+
+Based on that we need to analyze on their social values
+
+From the Social-value excel sheet, I pick timeless trend index which is more than 100%, which is listed bellow
+
+1. Community Involvement
+    The measure of the interest in what's happening in one's neighbourhood, city, town or region, reflected in activities ranging from     reading the weekly community newspaper to socio-political involvement in community organizations
+
+2. Consumptive
+    This construct represents enthusiasm for purchasing products or services in areas of particular interest (such as music, electronics, etc.), about which consumers make an effort to stay continually informed. Through books, magazines and by other means, consumers ensure that they are always up to date with the latest product offerings and market developments in their special area of interest, to take maximum advantage of their newest acquisitions.
+    
+    -These people mostly looking for branded items and most modern shopping elements.
+
+3. Culture Sampling
+    This construct identifies the view that other cultures have a great deal to teach us and measures people’s inclination to    incorporate some of these cultural influences into their own lives.
+    
+    -These people like to mingle with others and like to add some into their life. Based on the needs we can offer them their needs.
+    -advertisments or social media can tell us on what they need
+  
+4. Duty
+   The belief that duties and obligations to others should be fulfilled before turning to one's personal pleasures and interests.
+
+5. Effort towards health
+   The commitment to focus on diet, exercise and healthy living to feel better and have a healthy, wholesome lifestyle. A willingness to transform one’s lifestyle through exercise and radical changes to diet.
+   
+   -tried to make them available all excersise materials,apparels, diet boards and clothings
+  
+6. Emotional Control
+   The desire to live in a cool and controlled way. Also, a tendency to be guided less by one’s emotions, feelings and intuition than by reason and logic. No great tendency to explore emotion-based experiences.
+  
+7. Legacy
+   The desire to leave behind a legacy after death, either to one’s descendants or to society at large. This legacy could be of a financial, cultural, moral or spiritual nature. People strong on this construct tend to plan their bequests well in advance
+   
+   
+ 
+8. Need for Space
+
+     -Love to be indepentend. Like to get materials which helps in indepentend leaving, without interfearing others life
+  
+9. North American Dream
+   The belief that, like the United States, Canada is a “land of opportunity” and that anyone can make it and make it big if they try hard enough (i.e., the "American Dream"). The belief that even in middle age, one can start anew, launching new initiatives or changing one's way of life.
+   
+  - They like to create new business or career and their business needs should be a need
+  
+10 Personal Control
+  The desire to strive to organize and control the direction of one's future, even when it feels that there are forces beyond one's immediate control preventing it. The belief in one's basic ability to effect change and control one's life.
+  
+    -Clothing needs can be changed based on their beliefs 
+  
+11.Primacy Of Environmental protection
+   People strong on this construct prioritize the protection of the environment over economic advancement and job creation that could threaten the environment.
+  
+      -They like to buy items that does not halm the environment
+
+12. Rejection of Orderliness
+    The inclination to live with a certain amount of disorder as an expression of oneself. Also, a desire to distance oneself from society’s traditional moral code governing good manners and the golden rule in favour of a more informal and relaxed approach to life.
+  
+
+13. Social Learning
+    An attraction to, and interest in, diversity. The feeling that there is a great deal to learn through contact and conversation with people different from oneself, who come from other backgrounds and places. Diversity is perceived as a source of personal enrichment, a way to satisfy a hunger for discovery and exploration and to extend a network of contacts. This construct is also associated with a respect for other people and cultures, as well as a heightened social conscience.
+    
+    -They like to admire other people culture and their food and other accessories. We should keep in mind before marketting
+  
+When we think of retention strategies we should be aware of all these factors
+
+
+### Retention Stratergy:
+
+- 1st
+
+Above analysis gives us potential marketing targets.
+We can group these target based on their some similarities and social values or we cause our cluster from Kmeans algorithm.
+Based on the characteristics of grouping we can generate materials, online advertisements and other factors.
+Make these available to intended groups
+
+
+
+- 2nd
+
+Based on the above analysis, we got our target group and their Social values.
+People in this targeted group visited social media sites and when they click some advertisements, we can identify 
+their area of interest or what they are looking for and what are their requirements.
+Based on this data and their social values, we can make shopping items available in online stores.
+If a person who values primacy of Environmental protection, they it's better to add a tagline in the product like
+no animals, plants or environment has been destroyed for creating the product and also, this is environmental friendly.
+
+For example if a person working in Management role, health conscious and Social learning.He or she 
+is interested in regular exerciser, drinking more water, need to be in executive dress. For them they need exerciser equipment, exerciser bottle,diet books,need more professional dress, hair accessories etc
+
+We need to create advertisements and materials based on the cluster people may belongs and make them available to targeted people
+
+### Conclution
+
+- We had identify targeted group, identify main characteristic in society based on different features, find clusters using Kmeans algorithm which helps us to categorize and market each cluster based on its individual characteristic. 
+
+-We also look into the social values based on our target group and some of the strategies we could implement.
+
+## limits
+- Based on time limitation our analysis is limited
+
+- We can include mode stratergies 
+
+
+
+
+ 
