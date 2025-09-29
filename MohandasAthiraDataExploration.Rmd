@@ -1,0 +1,22 @@
+---
+title: "MohandasAthiraDataExploration"
+author: "Athira"
+date: "2025-03-31"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE,message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r pressure, echo=FALSE}
+
+```
+
+We had reached end of the program.
